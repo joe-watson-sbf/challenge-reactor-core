@@ -88,4 +88,5 @@ public class Player {
     public void setClub(String club) {
         this.club = club;
     }
+
 }

@@ -5,6 +5,7 @@ import com.opencsv.exceptions.CsvException;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -13,9 +14,9 @@ public class CsvUtilFile {
     private CsvUtilFile(){}
 
     public static List<Player> getPlayers(){
-        var uri =  CsvUtilFile.class.getClassLoader().getResource("data.csv");
+        var URI =  CsvUtilFile.class.getClassLoader().getResourceAsStream("data.csv");
         List<Player> list = new ArrayList<>();
-        try (CSVReader reader = new CSVReader(new FileReader(uri.getFile()))) {
+        try (CSVReader reader = new CSVReader(new InputStreamReader(URI))) {
             List<String[]> registers = reader.readAll();
             registers.forEach(strings -> list.add(new Player(
                     Integer.parseInt(strings[0].trim()),
@@ -28,7 +29,7 @@ public class CsvUtilFile {
                     strings[7]
             )));
 
-           return list;
+            return list;
 
         } catch (IOException | CsvException e) {
             throw new IllegalArgumentException(e.getMessage());

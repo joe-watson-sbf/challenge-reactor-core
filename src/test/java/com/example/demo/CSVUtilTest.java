@@ -2,6 +2,7 @@ package com.example.demo;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -61,6 +62,65 @@ public class CSVUtilTest {
                 .collectMultimap(Player::getClub);
 
         assert listFilter.block().size() == 322;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @Test
+    void jugadoresMayoresA34() {
+        String clubName = "Real Madrid";
+        List<Player> list = CsvUtilFile.getPlayers();
+        Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
+
+        Mono<Map<String, Collection<Player>>> listFilter = listFlux
+                .filter(player -> player.age > 34 )
+                .filter(player -> player.club.equals(clubName))
+                .map(player -> {
+                    player.name = player.name.toUpperCase(Locale.ROOT);
+                    return player;
+                })
+                .buffer(100)
+                .flatMap(playerA -> listFlux
+                        .filter(playerB -> playerA.stream()
+                                .anyMatch(a -> a.club.equals(playerB.club)))
+                )
+                .distinct()
+                .sort()
+                .collectMultimap(Player::getClub);
+
+        assert listFilter.block().size() == 0;
+    }
+
+    @Test
+    void testRankingDeVictoriasPorNacionalidad() {
+        List<Player> list = CsvUtilFile.getPlayers();
+        Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
+        Mono<Map<String, Collection<Player>>> listFilter = listFlux
+                .map(player -> {
+                    player.name = player.name.toUpperCase(Locale.ROOT);
+                    return player;
+                })
+                .buffer(100)
+                .flatMap(playerA -> listFlux
+                        .filter(playerB -> playerA.stream()
+                                .anyMatch(a ->  a.national.equals(playerB.national)))
+                )
+                .sort((player1, player2) -> Integer.compare(player2.getWinners(), player1.getWinners()))
+                .distinct()
+                .collectMultimap(Player::getNational);
+
+        assert listFilter.block().size() == 164;
     }
 
 
